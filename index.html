@@ -2,124 +2,170 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora Motor Trifásico - Estrela Triângulo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculadora Motor Trifásico</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
+      background: #f4f4f4;
       padding: 20px;
     }
     .container {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
+      background: #fff;
       max-width: 600px;
       margin: auto;
+      padding: 20px;
+      border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     h1 {
       text-align: center;
       color: #333;
     }
-    input, button {
+    label {
+      font-weight: bold;
+    }
+    input[type="number"] {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
+      margin: 10px 0 20px;
       border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
     }
     .resultado {
       margin-top: 20px;
-      background: #e6ffe6;
+      background: #e9ffe9;
       padding: 15px;
       border-radius: 5px;
+      border: 1px solid #b2ffb2;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Calculadora Motor Trifásico</h1>
-  <input type="number" id="cv" placeholder="Potência (CV)">
-  <input type="number" id="tensao" placeholder="Tensão (V)">
+  <h1>Calculadora Estrela-Triângulo</h1>
+
+  <label for="cv">Potência do Motor (CV):</label>
+  <input type="number" id="cv" placeholder="Ex: 30">
+
+  <label for="tensao">Tensão (V):</label>
+  <input type="number" id="tensao" placeholder="Ex: 220">
+
   <button onclick="calcular()">Calcular</button>
 
-  <div class="resultado" id="resultado"></div>
+  <div id="resultado" class="resultado" style="display:none;"></div>
 </div>
 
 <script>
+// Função principal
 function calcular() {
   const cv = parseFloat(document.getElementById('cv').value);
   const tensao = parseFloat(document.getElementById('tensao').value);
   const resultado = document.getElementById('resultado');
 
-  if (isNaN(cv) || isNaN(tensao) || cv <= 0 || tensao <= 0) {
-    resultado.innerHTML = "Preencha todos os campos corretamente!";
+  if (isNaN(cv) || isNaN(tensao)) {
+    alert("Por favor, preencha corretamente os campos!");
     return;
   }
 
-  if (cv > 75) {
-    resultado.innerHTML = "Essa calculadora suporta motores até 75CV.";
-    return;
-  }
+  // Cálculo da corrente nominal
+  const correnteNominal = (cv * 736) / (Math.sqrt(3) * tensao * 0.92); // Rendimento 92%
 
-  // Conversão de CV para kW
-  const kw = cv * 0.736;
-
-  // Corrente nominal
-  const cosfi = 0.85;
-  const rendimento = 0.92;
-  const correnteNominal = (kw * 1000) / (Math.sqrt(3) * tensao * cosfi * rendimento);
-
-  // Correntes para dimensionamento
+  // Cálculo EXATO que você pediu:
   const correnteK1K2 = (correnteNominal / 1.732) * 1.15;
-  const correnteK3 = (correnteNominal * 0.33) * 1.15;
+  const correnteK3 = correnteNominal * 0.33 * 1.15;
 
-  // Função para determinar contatora
-  function selecionaContatora(corrente) {
-    if (corrente < 9) return "CT9 (9A)";
-    if (corrente < 12) return "CT12 (12A)";
-    if (corrente < 18) return "CT18 (18A)";
-    if (corrente < 25) return "CT25 (25A)";
-    if (corrente < 32) return "CT32 (32A)";
-    if (corrente < 40) return "CT40 (40A)";
-    if (corrente < 50) return "CT50 (50A)";
-    if (corrente < 65) return "CT65 (65A)";
-    if (corrente < 80) return "CT80 (80A)";
-    if (corrente < 100) return "CT100 (100A)";
-    return "Consultar modelo especial!";
-  }
-
-  const contatoraK1 = selecionaContatora(correnteK1K2);
-  const contatoraK2 = selecionaContatora(correnteK1K2);
+  const contatoraK1K2 = selecionaContatora(correnteK1K2);
   const contatoraK3 = selecionaContatora(correnteK3);
+  const releTermico = selecionaReleMetaltex(correnteNominal);
+  const bitola = selecionaBitola(correnteNominal);
 
-  // Relé térmico
-  const releMin = (correnteNominal * 0.9).toFixed(1);
-  const releMax = (correnteNominal * 1.2).toFixed(1);
-
-  // Bitola de cabo
-  let bitola = "4 mm²";
-  if (correnteNominal > 36) bitola = "6 mm²";
-  if (correnteNominal > 50) bitola = "10 mm²";
-  if (correnteNominal > 68) bitola = "16 mm²";
-  if (correnteNominal > 89) bitola = "25 mm²";
-  if (correnteNominal > 111) bitola = "35 mm²";
-  if (correnteNominal > 134) bitola = "50 mm²";
-
+  resultado.style.display = "block";
   resultado.innerHTML = `
-    <strong>Resultados:</strong><br>
-    Corrente nominal estimada: <strong>${correnteNominal.toFixed(1)} A</strong><br><br>
-    <strong>Contatoras:</strong><br>
-    ➔ K1 (Principal): <strong>${contatoraK1}</strong><br>
-    ➔ K2 (Estrela): <strong>${contatoraK2}</strong><br>
-    ➔ K3 (Triângulo): <strong>${contatoraK3}</strong><br><br>
-    <strong>Relé térmico:</strong> <strong>${releMin}A até ${releMax}A</strong><br>
-    <strong>Bitola de cabo:</strong> <strong>${bitola}</strong><br>
-    <strong>Fechamento:</strong> Estrela-Triângulo<br><br>
-    <em>⚡ Valores aproximados! Confirme sempre em tabelas e normas técnicas.</em>
+    <strong>Corrente Nominal:</strong> ${correnteNominal.toFixed(2)} A<br><br>
+    <strong>Contatora K1 e K2:</strong> ${contatoraK1K2} (${correnteK1K2.toFixed(2)} A)<br>
+    <strong>Contatora K3:</strong> ${contatoraK3} (${correnteK3.toFixed(2)} A)<br>
+    <strong>Relé Térmico:</strong> ${releTermico}<br>
+    <strong>Bitola do Cabo:</strong> ${bitola}
   `;
+}
+
+// Seleciona a contatora conforme corrente
+function selecionaContatora(corrente) {
+  if (corrente <= 12) return "CT9 ou CT12";
+  if (corrente <= 18) return "CT18";
+  if (corrente <= 25) return "CT25";
+  if (corrente <= 32) return "CT32";
+  if (corrente <= 40) return "CT40";
+  if (corrente <= 50) return "CT50";
+  if (corrente <= 65) return "CT65";
+  if (corrente <= 80) return "CT80";
+  if (corrente <= 100) return "CT100";
+  return "Consultar fabricante para contatora acima de CT100.";
+}
+
+// Seleciona o relé térmico usando Metaltex
+function selecionaReleMetaltex(correnteNominal) {
+  const correnteMin = correnteNominal * 0.9;
+  const correnteMax = correnteNominal * 1.2;
+
+  const reles = [
+    { modelo: "RT22-1A", faixaMin: 1, faixaMax: 1.6 },
+    { modelo: "RT22-1.6A", faixaMin: 1.6, faixaMax: 2.5 },
+    { modelo: "RT22-2.5A", faixaMin: 2.5, faixaMax: 4 },
+    { modelo: "RT22-4A", faixaMin: 4, faixaMax: 6 },
+    { modelo: "RT22-6A", faixaMin: 6, faixaMax: 9 },
+    { modelo: "RT22-9A", faixaMin: 7, faixaMax: 10 },
+    { modelo: "RT22-10A", faixaMin: 9, faixaMax: 13 },
+    { modelo: "RT22-13A", faixaMin: 12, faixaMax: 18 },
+    { modelo: "RT22-18A", faixaMin: 16, faixaMax: 22 },
+    { modelo: "RT22-22A", faixaMin: 16, faixaMax: 22 },
+    { modelo: "RT40-22A", faixaMin: 16, faixaMax: 22 },
+    { modelo: "RT40-26A", faixaMin: 18, faixaMax: 26 },
+    { modelo: "RT40-36A", faixaMin: 24, faixaMax: 36 },
+    { modelo: "RT40-40A", faixaMin: 28, faixaMax: 40 },
+    { modelo: "RT85-40A", faixaMin: 28, faixaMax: 40 },
+    { modelo: "RT85-50A", faixaMin: 34, faixaMax: 50 },
+    { modelo: "RT85-65A", faixaMin: 45, faixaMax: 65 },
+    { modelo: "RT85-75A", faixaMin: 54, faixaMax: 75 },
+    { modelo: "RT85-85A", faixaMin: 63, faixaMax: 85 },
+    { modelo: "RT100-65A", faixaMin: 43, faixaMax: 65 },
+    { modelo: "RT100-80A", faixaMin: 54, faixaMax: 80 },
+    { modelo: "RT100-100A", faixaMin: 65, faixaMax: 100 }
+  ];
+
+  for (let i = 0; i < reles.length; i++) {
+    if (correnteMin >= reles[i].faixaMin && correnteMax <= reles[i].faixaMax) {
+      return `${reles[i].modelo} (${reles[i].faixaMin}A - ${reles[i].faixaMax}A)`;
+    }
+  }
+  
+  return "Consultar Metaltex! Corrente fora da faixa padrão.";
+}
+
+// Seleciona bitola do cabo
+function selecionaBitola(corrente) {
+  if (corrente <= 28) return "4 mm²";
+  if (corrente <= 36) return "6 mm²";
+  if (corrente <= 50) return "10 mm²";
+  if (corrente <= 68) return "16 mm²";
+  if (corrente <= 111) return "25 mm²";
+  if (corrente <= 134) return "35 mm²";
+  return "Consultar normas para bitola maior.";
 }
 </script>
 
