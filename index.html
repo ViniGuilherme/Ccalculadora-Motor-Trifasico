@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Motor Trifásico - Estrela Triângulo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .resultado {
+      margin-top: 20px;
+      background: #e6ffe6;
+      padding: 15px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Calculadora Motor Trifásico</h1>
+  <input type="number" id="cv" placeholder="Potência (CV)">
+  <input type="number" id="tensao" placeholder="Tensão (V)">
+  <button onclick="calcular()">Calcular</button>
+
+  <div class="resultado" id="resultado"></div>
+</div>
+
+<script>
+function calcular() {
+  const cv = parseFloat(document.getElementById('cv').value);
+  const tensao = parseFloat(document.getElementById('tensao').value);
+  const resultado = document.getElementById('resultado');
+
+  if (isNaN(cv) || isNaN(tensao) || cv <= 0 || tensao <= 0) {
+    resultado.innerHTML = "Preencha todos os campos corretamente!";
+    return;
+  }
+
+  if (cv > 75) {
+    resultado.innerHTML = "Essa calculadora suporta motores até 75CV.";
+    return;
+  }
+
+  // Conversão de CV para kW
+  const kw = cv * 0.736;
+
+  // Corrente nominal
+  const cosfi = 0.85;
+  const rendimento = 0.92;
+  const correnteNominal = (kw * 1000) / (Math.sqrt(3) * tensao * cosfi * rendimento);
+
+  // Correntes para dimensionamento
+  const correnteK1K2 = (correnteNominal / 1.732) * 1.15;
+  const correnteK3 = (correnteNominal * 0.33) * 1.15;
+
+  // Função para determinar contatora
+  function selecionaContatora(corrente) {
+    if (corrente < 9) return "CT9 (9A)";
+    if (corrente < 12) return "CT12 (12A)";
+    if (corrente < 18) return "CT18 (18A)";
+    if (corrente < 25) return "CT25 (25A)";
+    if (corrente < 32) return "CT32 (32A)";
+    if (corrente < 40) return "CT40 (40A)";
+    if (corrente < 50) return "CT50 (50A)";
+    if (corrente < 65) return "CT65 (65A)";
+    if (corrente < 80) return "CT80 (80A)";
+    if (corrente < 100) return "CT100 (100A)";
+    return "Consultar modelo especial!";
+  }
+
+  const contatoraK1 = selecionaContatora(correnteK1K2);
+  const contatoraK2 = selecionaContatora(correnteK1K2);
+  const contatoraK3 = selecionaContatora(correnteK3);
+
+  // Relé térmico
+  const releMin = (correnteNominal * 0.9).toFixed(1);
+  const releMax = (correnteNominal * 1.2).toFixed(1);
+
+  // Bitola de cabo
+  let bitola = "4 mm²";
+  if (correnteNominal > 36) bitola = "6 mm²";
+  if (correnteNominal > 50) bitola = "10 mm²";
+  if (correnteNominal > 68) bitola = "16 mm²";
+  if (correnteNominal > 89) bitola = "25 mm²";
+  if (correnteNominal > 111) bitola = "35 mm²";
+  if (correnteNominal > 134) bitola = "50 mm²";
+
+  resultado.innerHTML = `
+    <strong>Resultados:</strong><br>
+    Corrente nominal estimada: <strong>${correnteNominal.toFixed(1)} A</strong><br><br>
+    <strong>Contatoras:</strong><br>
+    ➔ K1 (Principal): <strong>${contatoraK1}</strong><br>
+    ➔ K2 (Estrela): <strong>${contatoraK2}</strong><br>
+    ➔ K3 (Triângulo): <strong>${contatoraK3}</strong><br><br>
+    <strong>Relé térmico:</strong> <strong>${releMin}A até ${releMax}A</strong><br>
+    <strong>Bitola de cabo:</strong> <strong>${bitola}</strong><br>
+    <strong>Fechamento:</strong> Estrela-Triângulo<br><br>
+    <em>⚡ Valores aproximados! Confirme sempre em tabelas e normas técnicas.</em>
+  `;
+}
+</script>
+
+</body>
+</html>
