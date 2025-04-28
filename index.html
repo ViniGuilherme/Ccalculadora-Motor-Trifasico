@@ -71,6 +71,19 @@
 </div>
 
 <script>
+// Função buscar corrente conforme tabela
+function buscarCorrente(cv) {
+  const tabelaCorrente = {
+    25: 35.5,
+    30: 44.2,
+    40: 56.6,
+    50: 68.8,
+    60: 84.1,
+    75: 103.4
+  };
+  return tabelaCorrente[cv] || 0;
+}
+
 // Função principal
 function calcular() {
   const cv = parseFloat(document.getElementById('cv').value);
@@ -82,17 +95,19 @@ function calcular() {
     return;
   }
 
-  // Cálculo da corrente nominal
-  const correnteNominal = (cv * 736) / (Math.sqrt(3) * tensao * 0.92); // Rendimento 92%
+  let correnteNominal = buscarCorrente(cv);
 
-  // Cálculo EXATO que você pediu:
+  if (tensao === 220) {
+    correnteNominal = correnteNominal * Math.sqrt(3);
+  }
+
   const correnteK1K2 = (correnteNominal / 1.732) * 1.15;
   const correnteK3 = correnteNominal * 0.33 * 1.15;
 
   const contatoraK1K2 = selecionaContatora(correnteK1K2);
   const contatoraK3 = selecionaContatora(correnteK3);
-  const releTermico = selecionaReleMetaltex(correnteNominal);
-  const bitola = selecionaBitola(correnteNominal);
+  const releTermico = selecionaReleMetaltex(correnteK1K2);
+  const bitola = selecionaBitola(correnteK1K2);
 
   resultado.style.display = "block";
   resultado.innerHTML = `
@@ -104,7 +119,7 @@ function calcular() {
   `;
 }
 
-// Seleciona a contatora conforme corrente
+// Seleciona a contatora
 function selecionaContatora(corrente) {
   if (corrente <= 12) return "CT9 ou CT12";
   if (corrente <= 18) return "CT18";
@@ -118,11 +133,8 @@ function selecionaContatora(corrente) {
   return "Consultar fabricante para contatora acima de CT100.";
 }
 
-// Seleciona o relé térmico usando Metaltex
-function selecionaReleMetaltex(correnteNominal) {
-  const correnteMin = correnteNominal * 0.9;
-  const correnteMax = correnteNominal * 1.2;
-
+// Seleciona o relé térmico Metaltex
+function selecionaReleMetaltex(corrente) {
   const reles = [
     { modelo: "RT22-1A", faixaMin: 1, faixaMax: 1.6 },
     { modelo: "RT22-1.6A", faixaMin: 1.6, faixaMax: 2.5 },
@@ -149,22 +161,22 @@ function selecionaReleMetaltex(correnteNominal) {
   ];
 
   for (let i = 0; i < reles.length; i++) {
-    if (correnteMin >= reles[i].faixaMin && correnteMax <= reles[i].faixaMax) {
+    if (corrente >= reles[i].faixaMin && corrente <= reles[i].faixaMax) {
       return `${reles[i].modelo} (${reles[i].faixaMin}A - ${reles[i].faixaMax}A)`;
     }
   }
-  
-  return "Consultar Metaltex! Corrente fora da faixa padrão.";
+  return "Consultar Metaltex! Corrente fora da faixa.";
 }
 
-// Seleciona bitola do cabo
+// Seleciona a bitola
 function selecionaBitola(corrente) {
-  if (corrente <= 28) return "4 mm²";
-  if (corrente <= 36) return "6 mm²";
-  if (corrente <= 50) return "10 mm²";
-  if (corrente <= 68) return "16 mm²";
-  if (corrente <= 111) return "25 mm²";
-  if (corrente <= 134) return "35 mm²";
+  const correnteCorrigida = corrente * 1.15;
+  if (correnteCorrigida <= 28) return "4 mm²";
+  if (correnteCorrigida <= 36) return "6 mm²";
+  if (correnteCorrigida <= 50) return "10 mm²";
+  if (correnteCorrigida <= 68) return "16 mm²";
+  if (correnteCorrigida <= 111) return "25 mm²";
+  if (correnteCorrigida <= 134) return "35 mm²";
   return "Consultar normas para bitola maior.";
 }
 </script>
