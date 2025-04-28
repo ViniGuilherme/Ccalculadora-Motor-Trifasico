@@ -107,7 +107,8 @@ function calcular() {
   const contatoraK1K2 = selecionaContatora(correnteK1K2);
   const contatoraK3 = selecionaContatora(correnteK3);
   const releTermico = selecionaReleMetaltex(correnteK1K2);
-  const bitola = selecionaBitola(correnteK1K2);
+  const bitolaPainel = selecionaBitolaPainel(correnteK1K2);
+  const bitola = selecionaBitola(correnteNominal);
 
   resultado.style.display = "block";
   resultado.innerHTML = `
@@ -115,6 +116,7 @@ function calcular() {
     <strong>Contatora K1 e K2:</strong> ${contatoraK1K2} (${correnteK1K2.toFixed(2)} A)<br>
     <strong>Contatora K3:</strong> ${contatoraK3} (${correnteK3.toFixed(2)} A)<br>
     <strong>Relé Térmico:</strong> ${releTermico}<br>
+    <strong>Bitola do Cabo do Painel:</strong> ${bitolaPainel}
     <strong>Bitola do Cabo:</strong> ${bitola}
   `;
 }
@@ -168,8 +170,8 @@ function selecionaReleMetaltex(corrente) {
   return "Consultar Metaltex! Corrente fora da faixa.";
 }
 
-// Seleciona a bitola
-function selecionaBitola(corrente) {
+// Seleciona a bitola do painel
+function selecionaBitolaPainel(corrente) {
   const correnteCorrigida = corrente * 1.15;
   if (correnteCorrigida <= 28) return "4 mm²";
   if (correnteCorrigida <= 36) return "6 mm²";
@@ -179,6 +181,19 @@ function selecionaBitola(corrente) {
   if (correnteCorrigida <= 134) return "35 mm²";
   return "Consultar normas para bitola maior.";
 }
+
+// Seleciona a bitola
+function selecionaBitola(corrente) {
+  const correnteCorrigida = corrente * 1.05;
+  if (correnteCorrigida <= 28) return "4 mm²";
+  if (correnteCorrigida <= 36) return "6 mm²";
+  if (correnteCorrigida <= 50) return "10 mm²";
+  if (correnteCorrigida <= 68) return "16 mm²";
+  if (correnteCorrigida <= 111) return "25 mm²";
+  if (correnteCorrigida <= 134) return "35 mm²";
+  return "Consultar normas para bitola maior.";
+}
+
 </script>
 
 </body>
