@@ -116,7 +116,7 @@ function calcular() {
     <strong>Contatora K1 e K2:</strong> ${contatoraK1K2} (${correnteK1K2.toFixed(2)} A)<br>
     <strong>Contatora K3:</strong> ${contatoraK3} (${correnteK3.toFixed(2)} A)<br>
     <strong>Relé Térmico:</strong> ${releTermico}<br>
-    <strong>Bitola do Cabo do Painel:</strong> ${bitolaPainel}
+    <strong>Bitola do Cabo do Painel:</strong> ${bitolaPainel}<br>
     <strong>Bitola do Cabo:</strong> ${bitola}
   `;
 }
@@ -132,7 +132,7 @@ function selecionaContatora(corrente) {
   if (corrente <= 65) return "CT65";
   if (corrente <= 80) return "CT80";
   if (corrente <= 100) return "CT100";
-  return "Consultar fabricante para contatora acima de CT100.";
+  return "Consultar Metaltex! Corrente fora da faixa.";
 }
 
 // Seleciona o relé térmico Metaltex
