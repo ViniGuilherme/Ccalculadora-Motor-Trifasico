@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calculadora Motor Trifásico</title>
   <link rel="stylesheet" href="style.css" />
- 
 </head>
 <body>
-
 <div class="container">
-  <h1>Calculadora Estrela-Triângulo</h1>
+  <h1>Calculadora</h1>
 
   <label for="cv">Potência do Motor (CV):</label>
-  <input type="number" id="cv" placeholder="Ex: 30">
+  <input type="number" id="cv" placeholder="Ex: 30" />
 
   <label for="tensao">Tensão (V):</label>
-  <input type="number" id="tensao" placeholder="Ex: 220">
+  <input type="number" id="tensao" placeholder="Ex: 220" />
+
+  <label for="polos">Nº de Polos:</label>
+  <select id="polos">
+    <option value="4">4 Polos (moinho)</option>
+    <option value="6">6 Polos (triturador)</option>
+  </select>
 
   <button onclick="calcular()">Calcular</button>
 
@@ -24,23 +28,36 @@
 </div>
 
 <script>
-// Função buscar corrente conforme tabela
-function buscarCorrente(cv) {
-  const tabelaCorrente = {
+// Correntes reais (Marathon IR3) - 4 polos
+const tabela4Polos = {
     25: 35.5,
     30: 44.2,
     40: 56.6,
     50: 68.8,
     60: 84.1,
     75: 103.4
-  };
-  return tabelaCorrente[cv] || 0;
+};
+
+// Correntes reais (Marathon IR3) - 6 polos
+const tabela6Polos = {
+    15: 12.6,
+    20: 30.5,
+    30: 45.1,
+    40: 60.2,
+    50: 71.3,
+    60: 87.7,
+    75: 108.2
+};
+
+function buscarCorrente(cv, polos) {
+  const tabela = polos == 6 ? tabela6Polos : tabela4Polos;
+  return tabela[cv] || 0;
 }
 
-// Função principal
 function calcular() {
   const cv = parseFloat(document.getElementById('cv').value);
   const tensao = parseFloat(document.getElementById('tensao').value);
+  const polos = parseInt(document.getElementById('polos').value);
   const resultado = document.getElementById('resultado');
 
   if (isNaN(cv) || isNaN(tensao)) {
@@ -48,33 +65,58 @@ function calcular() {
     return;
   }
 
-  let correnteNominal = buscarCorrente(cv);
-
-  if (tensao === 220) {
-    correnteNominal = correnteNominal * Math.sqrt(3);
+  let correnteNominal = buscarCorrente(cv, polos);
+  if (correnteNominal === 0) {
+    alert("Potência não encontrada na tabela.");
+    return;
   }
 
-  const correnteK1K2 = (correnteNominal / 1.732) * 1.15;
-  const correnteK3 = correnteNominal * 0.33 * 1.15;
+  if (tensao === 220) {
+    correnteNominal *= Math.sqrt(3);
+  }
 
-  const contatoraK1K2 = selecionaContatora(correnteK1K2);
-  const contatoraK3 = selecionaContatora(correnteK3);
+  let contatoraPrincipal, contatoraReversao, contatoraK3, correnteK1K2, correnteK3;
+
+  if (polos === 6) {
+    // Triturador - 6 polos: usa corrente nominal * 1.15
+    correnteK1K2 = correnteNominal;
+    contatoraPrincipal = selecionaContatora(correnteK1K2);
+    contatoraReversao = contatoraPrincipal;
+  } else {
+    // Moinho - 4 polos: usa fórmula estrela-triângulo
+    correnteK1K2 = (correnteNominal / 1.732) * 1.15;
+    correnteK3 = correnteNominal * 0.33 * 1.15;
+    contatoraPrincipal = selecionaContatora(correnteK1K2);
+    contatoraK3 = selecionaContatora(correnteK3);
+  }
+
   const releTermico = selecionaReleMetaltex(correnteK1K2);
   const bitolaPainel = selecionaBitolaPainel(correnteK1K2);
   const bitola = selecionaBitola(correnteNominal);
 
   resultado.style.display = "block";
-  resultado.innerHTML = `
-    <strong>Corrente Nominal:</strong> ${correnteNominal.toFixed(2)} A<br><br>
-    <strong>Contatora K1 e K2:</strong> ${contatoraK1K2} (${correnteK1K2.toFixed(2)} A)<br>
-    <strong>Contatora K3:</strong> ${contatoraK3} (${correnteK3.toFixed(2)} A)<br>
-    <strong>Relé Térmico:</strong> ${releTermico}<br>
-    <strong>Bitola do Cabo do Painel:</strong> ${bitolaPainel}<br>
-    <strong>Bitola do Cabo:</strong> ${bitola}
-  `;
+
+  if (polos === 6) {
+    resultado.innerHTML = `
+      <strong>Corrente Nominal:</strong> ${correnteNominal.toFixed(2)} A<br><br>
+      <strong>Contatora Principal:</strong> ${contatoraPrincipal} (${correnteK1K2.toFixed(2)} A)<br>
+      <strong>Contatora de Reversão:</strong> ${contatoraReversao}<br>
+      <strong>Relé Térmico:</strong> ${releTermico}<br>
+      <strong>Bitola do Cabo do Painel:</strong> ${bitolaPainel}<br>
+      <strong>Bitola do Cabo:</strong> ${bitola}
+    `;
+  } else {
+    resultado.innerHTML = `
+      <strong>Corrente Nominal:</strong> ${correnteNominal.toFixed(2)} A<br><br>
+      <strong>Contatora K1 e K2:</strong> ${contatoraPrincipal} (${correnteK1K2.toFixed(2)} A)<br>
+      <strong>Contatora K3:</strong> ${contatoraK3} (${correnteK3.toFixed(2)} A)<br>
+      <strong>Relé Térmico:</strong> ${releTermico}<br>
+      <strong>Bitola do Cabo do Painel:</strong> ${bitolaPainel}<br>
+      <strong>Bitola do Cabo:</strong> ${bitola}
+    `;
+  }
 }
 
-// Seleciona a contatora
 function selecionaContatora(corrente) {
   if (corrente <= 12) return "CT9 ou CT12";
   if (corrente <= 18) return "CT18";
@@ -83,12 +125,11 @@ function selecionaContatora(corrente) {
   if (corrente <= 40) return "CT40";
   if (corrente <= 50) return "CT50";
   if (corrente <= 65) return "CT65";
-  if (corrente <= 80) return "CT80";
+  if (corrente <= 80) return "CT85";
   if (corrente <= 100) return "CT100";
-  return "Consultar Metaltex! Corrente fora da faixa.";
+  return "Consultar Metaltex";
 }
 
-// Seleciona o relé térmico Metaltex
 function selecionaReleMetaltex(corrente) {
   const reles = [
     { modelo: "RT22-1A", faixaMin: 1, faixaMax: 1.6 },
@@ -100,12 +141,9 @@ function selecionaReleMetaltex(corrente) {
     { modelo: "RT22-10A", faixaMin: 9, faixaMax: 13 },
     { modelo: "RT22-13A", faixaMin: 12, faixaMax: 18 },
     { modelo: "RT22-18A", faixaMin: 16, faixaMax: 22 },
-    { modelo: "RT22-22A", faixaMin: 16, faixaMax: 22 },
-    { modelo: "RT40-22A", faixaMin: 16, faixaMax: 22 },
     { modelo: "RT40-26A", faixaMin: 18, faixaMax: 26 },
     { modelo: "RT40-36A", faixaMin: 24, faixaMax: 36 },
     { modelo: "RT40-40A", faixaMin: 28, faixaMax: 40 },
-    { modelo: "RT85-40A", faixaMin: 28, faixaMax: 40 },
     { modelo: "RT85-50A", faixaMin: 34, faixaMax: 50 },
     { modelo: "RT85-65A", faixaMin: 45, faixaMax: 65 },
     { modelo: "RT85-75A", faixaMin: 54, faixaMax: 75 },
@@ -120,34 +158,30 @@ function selecionaReleMetaltex(corrente) {
       return `${reles[i].modelo} (${reles[i].faixaMin}A - ${reles[i].faixaMax}A)`;
     }
   }
-  return "Consultar Metaltex! Corrente fora da faixa.";
+  return "Consultar Metaltex";
 }
 
-// Seleciona a bitola do painel
 function selecionaBitolaPainel(corrente) {
-  const correnteCorrigida = corrente * 1.15;
-  if (correnteCorrigida <= 28) return "4 mm²";
-  if (correnteCorrigida <= 36) return "6 mm²";
-  if (correnteCorrigida <= 50) return "10 mm²";
-  if (correnteCorrigida <= 68) return "16 mm²";
-  if (correnteCorrigida <= 111) return "25 mm²";
-  if (correnteCorrigida <= 134) return "35 mm²";
-  return "Consultar normas para bitola maior.";
+  const corrigida = corrente * 1.15;
+  if (corrigida <= 28) return "4 mm²";
+  if (corrigida <= 36) return "6 mm²";
+  if (corrigida <= 50) return "10 mm²";
+  if (corrigida <= 68) return "16 mm²";
+  if (corrigida <= 111) return "25 mm²";
+  if (corrigida <= 134) return "35 mm²";
+  return "Consultar norma";
 }
 
-// Seleciona a bitola
 function selecionaBitola(corrente) {
-  const correnteCorrigida = corrente * 1.05;
-  if (correnteCorrigida <= 28) return "4 mm²";
-  if (correnteCorrigida <= 36) return "6 mm²";
-  if (correnteCorrigida <= 50) return "10 mm²";
-  if (correnteCorrigida <= 68) return "16 mm²";
-  if (correnteCorrigida <= 111) return "25 mm²";
-  if (correnteCorrigida <= 134) return "35 mm²";
-  return "Consultar normas para bitola maior.";
+  const corrigida = corrente * 1.05;
+  if (corrigida <= 28) return "4 mm²";
+  if (corrigida <= 36) return "6 mm²";
+  if (corrigida <= 50) return "10 mm²";
+  if (corrigida <= 68) return "16 mm²";
+  if (corrigida <= 111) return "25 mm²";
+  if (corrigida <= 134) return "35 mm²";
+  return "Consultar norma";
 }
-
 </script>
-
 </body>
 </html>
