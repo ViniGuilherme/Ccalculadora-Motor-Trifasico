@@ -1,47 +1,194 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
   padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .container {
-  background: #fff;
-  max-width: 600px;
+  background: #ffffff;
+  max-width: 650px;
+  width: 100%;
   margin: auto;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
+.container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+}
+
 h1 {
   text-align: center;
-  color: #333;
+  color: #2d3748;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.5px;
 }
+
+h1::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  margin: 15px auto 30px;
+  border-radius: 2px;
+}
+
 label {
-  font-weight: bold;
+  display: block;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
 }
-input[type="number"] {
+
+input[type="number"],
+select {
   width: 100%;
-  padding: 10px;
-  margin: 10px 0 20px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #2d3748;
+  background: #ffffff;
+  transition: all 0.3s ease;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+
+input[type="number"]:focus,
+select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: #f7fafc;
+}
+
+input[type="number"]:hover,
+select:hover {
+  border-color: #cbd5e0;
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
 button {
   width: 100%;
-  padding: 10px;
-  background: #007bff;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   color: white;
-  font-size: 16px;
-  border-radius: 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  letter-spacing: 0.5px;
+  margin-top: 8px;
 }
+
 button:hover {
-  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  background: linear-gradient(135deg, #5568d3 0%, #6a3d8f 100%);
 }
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+}
+
 .resultado {
-  margin-top: 20px;
-  background: #e9ffe9;
-  padding: 15px;
-  border-radius: 5px;
-  border: 1px solid #b2ffb2;
+  margin-top: 30px;
+  background: linear-gradient(135deg, #f0fff4 0%, #e6ffed 100%);
+  padding: 24px;
+  border-radius: 12px;
+  border-left: 4px solid #48bb78;
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.15);
+  animation: fadeIn 0.4s ease;
+  line-height: 1.8;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.resultado strong {
+  color: #22543d;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 200px;
+}
+
+.resultado br {
+  margin-bottom: 8px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  body {
+    padding: 15px;
+  }
+
+  .container {
+    padding: 30px 25px;
+    border-radius: 12px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  .resultado strong {
+    min-width: auto;
+    display: block;
+    margin-bottom: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 25px 20px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  input[type="number"],
+  select,
+  button {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
 }
